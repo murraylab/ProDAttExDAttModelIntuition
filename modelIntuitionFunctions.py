@@ -11,7 +11,7 @@ import seaborn as sns
 def createPrototypeState(state_examples,exemplar_props=np.array([0.5,0.5]),n_examples=100,noise_sigma=10**-8):
     if type(state_examples) != np.ndarray:
         raise ValueError('state_examples must be a numpy array')
-    if (type(state_examples[0]) != np.int64) and (type(state_examples[0]) != int): 
+    if not (state_examples % state_examples.astype(int) == 0).all():
         raise ValueError('values for cues and state exemplars must be of type int or int64')
     if type(exemplar_props) != np.ndarray:
         raise ValueError('exemplar_props must be a numpy array')
@@ -30,9 +30,9 @@ def createPrototypeState(state_examples,exemplar_props=np.array([0.5,0.5]),n_exa
     state_prototype_mu = np.mean(examples,axis=0)
     precision = calcPrecision(examples,noise_sigma=noise_sigma)
     state = {
-        'mu': state_prototype_mu,
+        'mu': state_prototype_mu.astype(int),
         'precision': precision,
-        'examples': examples
+        'examples': examples.astype(int)
     }
     return state
 
@@ -50,7 +50,7 @@ def createExemplarState(state_exemplars,exemplar_props=np.array([0.5,0.5]),n_exa
     '''
     if type(state_exemplars) != np.ndarray:
         raise ValueError('state_examples must be a numpy array')
-    if (type(state_exemplars[0]) != np.int64) and (type(state_exemplars[0]) != int): 
+    if not (state_exemplars % state_exemplars.astype(int) == 0).all():
         raise ValueError('values for cues and state exemplars must be of type int or int64')
     if type(exemplar_props) != np.ndarray:
         raise ValueError('exemplar_props must be a numpy array')
@@ -61,8 +61,9 @@ def createExemplarState(state_exemplars,exemplar_props=np.array([0.5,0.5]),n_exa
     state = []
     for s in range(2):
         state.append(
-            {'mu': state_exemplars[s,:],
-            'examples': np.tile(state_exemplars[s,:],(n_examples_per_state[s],1))}
+            {'mu': state_exemplars[s,:].astype(int),
+            'examples': np.tile(state_exemplars[s,:],(n_examples_per_state[s],1)).astype(int)
+            }
         )
         state[s]['precision'] = calcPrecision(state[s]['examples'],noise_sigma=noise_sigma)
 
@@ -72,8 +73,8 @@ def createExemplarState(state_exemplars,exemplar_props=np.array([0.5,0.5]),n_exa
 def calcStateSurprise(cue,mu, precision=None, w_A=None,blur_states_param_linear=0.0):
     if (type(cue) != np.ndarray) or (type(mu) != np.ndarray):
         raise ValueError('cue and mu must be a numpy arrays')
-    if (type(cue[0]) != np.int64) and (type(cue[0]) != int) or (type(mu[0]) != np.int64) and (type(mu[0]) != int): 
-        raise ValueError('values for cue and cue must be of type int or int64')
+    if (not (cue % cue.astype(int) == 0).all()) or (not (mu % mu.astype(int) == 0).all()):
+        raise ValueError('values for cue and mu  exemplars must be of type int or int64')
     if w_A is None:
         w_A = np.ones(len(cue))*.5
     if precision is None:
